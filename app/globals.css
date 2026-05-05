@@ -2,26 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import url("https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;700&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap");
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --font-share-tech-mono: "Share Tech Mono";
+  --font-rajdhani: "Rajdhani";
+  --font-exo-2: "Exo 2";
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: #f2f6ff;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(79, 230, 255, 0.25), transparent 28%),
+    radial-gradient(circle at 100% 0%, rgba(158, 134, 255, 0.22), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(255, 177, 74, 0.2), transparent 28%),
+    radial-gradient(circle at 20% 70%, rgba(102, 255, 178, 0.12), transparent 24%),
+    #070912;
+  font-family: var(--font-exo-2), sans-serif;
+}
+
+* {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0d1324;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #2a3a61;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #4fe6ff;
+}
+
+@layer components {
+  .color-panel {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(158, 134, 255, 0.25);
+    box-shadow: 0 0 0 1px rgba(79, 230, 255, 0.08) inset;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Vivid heading gradients (background-clip) */
+  .text-gradient-brand {
+    display: inline-block;
+    background-image: linear-gradient(
+      105deg,
+      #4fe6ff 0%,
+      #9e86ff 32%,
+      #ff9f5a 68%,
+      #66ffb2 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-gradient-cool {
+    display: inline-block;
+    background-image: linear-gradient(95deg, #4fe6ff, #9e86ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-gradient-warm {
+    display: inline-block;
+    background-image: linear-gradient(95deg, #ff9f5a, #ff5f7f);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-gradient-mono {
+    display: inline-block;
+    font-family: var(--font-share-tech-mono), monospace;
+    background-image: linear-gradient(90deg, #66ffb2, #4fe6ff, #9e86ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 }

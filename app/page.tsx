@@ -1,101 +1,76 @@
-import Image from "next/image";
+import { Activity, CheckSquare, FileText, Shield, TerminalSquare } from "lucide-react";
+import Link from "next/link";
+import { sections } from "@/lib/commands";
+
+const sectionCardAccents = [
+  { icon: "text-core", title: "text-gradient-cool", meta: "text-adblue/85" },
+  { icon: "text-violet", title: "text-violet", meta: "text-post/85" },
+  { icon: "text-post", title: "text-gradient-warm", meta: "text-success/85" },
+  { icon: "text-success", title: "text-success", meta: "text-core/85" },
+  { icon: "text-adblue", title: "text-adblue", meta: "text-violet/85" },
+  { icon: "text-orange", title: "text-orange", meta: "text-core/85" },
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const quick = [
+    { href: "/revshell", label: "Rev Shell Generator", icon: TerminalSquare, iconClass: "text-core", titleClass: "text-core" },
+    { href: "/checklist", label: "Exam Checklist", icon: CheckSquare, iconClass: "text-success", titleClass: "text-success" },
+    { href: "/report", label: "Report Builder", icon: FileText, iconClass: "text-post", titleClass: "text-post" },
+    { href: "/workflow", label: "Workflow Board", icon: Activity, iconClass: "text-violet", titleClass: "text-violet" },
+  ];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  return (
+    <div className="space-y-8">
+      <header className="space-y-2">
+        <h1 className="font-heading text-5xl text-gradient-brand">OSCP WIKI</h1>
+        <p className="max-w-xl text-bright/80">
+          <span className="text-core">Local-only</span> personal knowledge base —{" "}
+          <span className="text-violet">recon</span>, <span className="text-post">exploit</span>,{" "}
+          <span className="text-success">privesc</span>, <span className="text-adblue">report</span>.
+        </p>
+      </header>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {quick.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="color-panel rounded-md p-4 transition hover:border-violet/50"
+            >
+              <Icon size={18} className={`mb-2 ${item.iconClass}`} />
+              <p className={`font-heading text-lg ${item.titleClass}`}>{item.label}</p>
+            </Link>
+          );
+        })}
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {sections.map((section, i) => {
+          const accent = sectionCardAccents[i % sectionCardAccents.length];
+          const cmdCount = section.groups.reduce((a, g) => a + g.commands.length, 0);
+          return (
+            <Link
+              key={section.id}
+              href={`/${section.slug}`}
+              className="color-panel rounded-md p-4 transition hover:border-core/40"
+            >
+              <Shield size={18} className={`mb-2 ${accent.icon}`} />
+              <p className={`font-heading text-lg ${accent.title}`}>{section.title}</p>
+              <p className={`text-sm ${accent.meta}`}>
+                <span className="text-violet/90">{section.groups.length}</span> groups ·{" "}
+                <span className="text-core/90">{cmdCount}</span> commands
+              </p>
+            </Link>
+          );
+        })}
+      </section>
+
+      <p className="font-mono text-sm">
+        <span className="text-warn">Tip:</span> <span className="text-dim">Press</span>{" "}
+        <span className="text-gradient-mono">Ctrl+K</span> <span className="text-dim">for global command search.</span>
+      </p>
     </div>
   );
 }
