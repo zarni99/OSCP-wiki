@@ -1,3 +1,9 @@
+# OSCP Wiki
+
+## About this App
+
+OSCP Wiki is a Next.js web application tailored for storing, searching, and organizing notes for the Offensive Security Certified Professional (OSCP) certification. Built with React and Tailwind CSS, it serves as a personal knowledge base for penetration testing techniques, commands, and study materials.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

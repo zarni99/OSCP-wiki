@@ -1,245 +1,198 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
-import { ChangeEvent, useEffect, useState } from "react";
+import { FileText, Shield, Target, Network, Paperclip, Download, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ReportData, ReportTab, emptyReport, Target as TargetType } from "./types";
+import CoverTab from "./CoverTab";
+import SummaryTab from "./SummaryTab";
+import TargetsTab from "./TargetsTab";
+import ADChainTab from "./ADChainTab";
+import AppendixTab from "./AppendixTab";
+import { exportReport } from "./exportPdf";
 
-interface Screenshot {
-  id: string;
-  name: string;
-  dataUrl: string;
-  caption: string;
-}
-interface Machine {
-  id: string;
-  name: string;
-  ip: string;
-  os: "linux" | "windows" | "unknown";
-  points: "10" | "20" | "25";
-  localTxt: string;
-  proofTxt: string;
-  vulnerabilities: string;
-  enumSteps: string;
-  exploitSteps: string;
-  privescSteps: string;
-  notes: string;
-  screenshots: Screenshot[];
-}
+const STORAGE_KEY = "oscp-report-v2";
 
-const emptyMachine = (): Machine => ({
-  id: crypto.randomUUID(),
-  name: "TARGET-01",
-  ip: "",
-  os: "unknown",
-  points: "20",
-  localTxt: "",
-  proofTxt: "",
-  vulnerabilities: "",
-  enumSteps: "",
-  exploitSteps: "",
-  privescSteps: "",
-  notes: "",
-  screenshots: [],
-});
-
-const key = "oscp-report-builder";
+const tabs: { id: ReportTab; label: string; icon: typeof FileText }[] = [
+  { id: "cover", label: "Cover Page", icon: Shield },
+  { id: "summary", label: "Summary & Methodology", icon: FileText },
+  { id: "targets", label: "Target Walkthroughs", icon: Target },
+  { id: "ad-chain", label: "AD Attack Chain", icon: Network },
+  { id: "appendix", label: "Appendix", icon: Paperclip },
+];
 
 export default function ReportPage() {
-  const [candidateName, setCandidateName] = useState("");
-  const [osid, setOsid] = useState("");
-  const [examDate, setExamDate] = useState("");
-  const [machines, setMachines] = useState<Machine[]>([emptyMachine()]);
-  const [active, setActive] = useState(0);
+  const [data, setData] = useState<ReportData>(emptyReport());
+  const [activeTab, setActiveTab] = useState<ReportTab>("cover");
+  const [activeTarget, setActiveTarget] = useState(0);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem(key);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    setCandidateName(data.candidateName || "");
-    setOsid(data.osid || "");
-    setExamDate(data.examDate || "");
-    setMachines(data.machines?.length ? data.machines : [emptyMachine()]);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        setData({ ...emptyReport(), ...parsed });
+      } catch {}
+    }
+    setLoaded(true);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(key, JSON.stringify({ candidateName, osid, examDate, machines }));
-  }, [candidateName, examDate, machines, osid]);
+    if (loaded) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  }, [data, loaded]);
 
-  const machine = machines[active];
-
-  const updateMachine = (patch: Partial<Machine>) => {
-    setMachines((prev) => prev.map((m, i) => (i === active ? { ...m, ...patch } : m)));
+  const update = (patch: Partial<ReportData>) => {
+    setData((prev) => ({ ...prev, ...patch }));
   };
 
-  const addMachine = () => {
-    setMachines((prev) => [...prev, emptyMachine()]);
-    setActive(machines.length);
+  const setTargets = (fn: React.SetStateAction<TargetType[]>) => {
+    setData((prev) => ({
+      ...prev,
+      targets: typeof fn === "function" ? fn(prev.targets) : fn,
+    }));
   };
 
-  const removeMachine = (index: number) => {
-    if (machines.length === 1) return;
-    setMachines((prev) => prev.filter((_, i) => i !== index));
-    setActive((v) => Math.max(0, v > index ? v - 1 : v === index ? 0 : v));
+  const resetReport = () => {
+    if (confirm("Reset all report data? This cannot be undone.")) {
+      setData(emptyReport());
+      setActiveTarget(0);
+    }
   };
 
-  const uploadScreens = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const data = await Promise.all(
-      files.map(
-        (file) =>
-          new Promise<Screenshot>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () =>
-              resolve({
-                id: crypto.randomUUID(),
-                name: file.name,
-                dataUrl: String(reader.result),
-                caption: "",
-              });
-            reader.readAsDataURL(file);
-          }),
-      ),
-    );
-    updateMachine({ screenshots: [...machine.screenshots, ...data] });
-  };
+  // Completion stats
+  const totalTargets = data.targets.length;
+  const ownedTargets = data.targets.filter((t) => t.proofTxt).length;
+  const userTargets = data.targets.filter((t) => t.localTxt).length;
+  const totalVulns = data.targets.reduce((s, t) => s + t.vulnerabilities.filter((v) => v.title).length, 0);
+  const hasAD = data.targets.some((t) => t.isAD);
 
-  const exportPdf = () => {
-    const win = window.open("", "_blank");
-    if (!win) return;
-    const pages = machines
-      .map(
-        (m) => `
-      <section class="page">
-        <h2>${m.name} (${m.ip})</h2>
-        <p><b>OS:</b> ${m.os} | <b>Points:</b> ${m.points}</p>
-        <p class="flag"><b>local.txt:</b> ${m.localTxt || "-"}</p>
-        <p class="flag"><b>proof.txt:</b> ${m.proofTxt || "-"}</p>
-        <h3>Vulnerability Summary</h3><pre>${m.vulnerabilities}</pre>
-        <h3>Enumeration Steps</h3><pre>${m.enumSteps}</pre>
-        <h3>Exploitation Steps</h3><pre>${m.exploitSteps}</pre>
-        <h3>Privilege Escalation Steps</h3><pre>${m.privescSteps}</pre>
-        <h3>Additional Notes</h3><pre>${m.notes}</pre>
-        <h3>Screenshots</h3>
-        <div class="shots">${m.screenshots.map((s) => `<figure><img src="${s.dataUrl}" /><figcaption>${s.caption || s.name}</figcaption></figure>`).join("")}</div>
-      </section>`,
-      )
-      .join("");
+  // Completion checks
+  const checks = [
+    { label: "Candidate info", ok: !!(data.candidateName && data.osid) },
+    { label: "Executive summary", ok: !!data.executiveSummary },
+    { label: "Methodology", ok: !!data.methodology },
+    { label: "At least 1 target", ok: data.targets.some((t) => t.name && t.ip) },
+    { label: "Vulnerability documented", ok: totalVulns > 0 },
+    { label: "Exploitation steps", ok: data.targets.some((t) => t.exploitation) },
+    { label: "Proof flags captured", ok: data.targets.some((t) => t.proofTxt) },
+    { label: "Proof screenshots", ok: data.targets.some((t) => t.proofScreenshot) },
+  ];
+  const completionPct = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
 
-    win.document.write(`
-      <html><head><title>OSCP Report</title>
-      <style>
-        body { font-family: Arial, sans-serif; color:#111; padding:20px; }
-        .page { page-break-after: always; }
-        .flag { background:#e7ffe7; border:1px solid #59aa59; padding:6px; }
-        .shots { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-        img { max-width:100%; border:1px solid #ddd; }
-        pre { white-space:pre-wrap; border:1px solid #ddd; padding:8px; }
-        @media print { .page { break-after: page; } }
-      </style>
-      </head><body>
-        <section class="page">
-          <h1>OSCP Exam Report</h1>
-          <p><b>Candidate:</b> ${candidateName || "-"}</p>
-          <p><b>OSID:</b> ${osid || "-"}</p>
-          <p><b>Exam Date:</b> ${examDate || "-"}</p>
-        </section>
-        ${pages}
-      </body></html>
-    `);
-    win.document.close();
-    win.focus();
-    win.print();
-  };
+  if (!loaded) return null;
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-3xl text-gradient-brand">Report Builder</h1>
-        <button onClick={exportPdf} className="rounded border border-danger/50 bg-gradient-to-r from-danger/15 to-violet/10 px-3 py-2 text-sm text-danger hover:border-danger">Export PDF</button>
-      </div>
-      <div className="color-panel grid gap-2 rounded-md p-3 md:grid-cols-3">
-        <input value={candidateName} onChange={(e) => setCandidateName(e.target.value)} placeholder="Candidate Name" className="rounded border border-violet/40 bg-surface px-3 py-2" spellCheck={false} autoComplete="off" />
-        <input value={osid} onChange={(e) => setOsid(e.target.value)} placeholder="OSID" className="rounded border border-violet/40 bg-surface px-3 py-2" spellCheck={false} autoComplete="off" />
-        <input value={examDate} onChange={(e) => setExamDate(e.target.value)} placeholder="Exam Date" className="rounded border border-violet/40 bg-surface px-3 py-2" spellCheck={false} autoComplete="off" />
+        <div>
+          <h1 className="font-heading text-3xl text-gradient-brand">Report Builder</h1>
+          <p className="text-xs text-dim mt-1">Professional OSCP+ Penetration Test Report</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={resetReport}
+            className="rounded border border-border px-3 py-2 text-sm text-dim hover:border-red/40 hover:text-red transition"
+          >
+            <Trash2 size={14} className="inline mr-1" />
+            Reset
+          </button>
+          <button
+            onClick={() => exportReport(data)}
+            className="rounded border border-core/50 bg-gradient-to-r from-core/15 to-violet/10 px-4 py-2 text-sm text-core hover:border-core hover:shadow-[0_0_12px_rgba(73,184,255,0.2)] transition"
+          >
+            <Download size={14} className="inline mr-1" />
+            Export PDF
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {machines.map((m, idx) => {
-          const color = m.localTxt && m.proofTxt ? "bg-green" : m.localTxt ? "bg-orange" : "bg-dim";
+      {/* Stats Bar */}
+      <div className="color-panel rounded-lg p-4">
+        <div className="flex flex-wrap items-center gap-6">
+          {/* Progress Ring */}
+          <div className="flex items-center gap-3">
+            <div className="relative h-12 w-12">
+              <svg viewBox="0 0 36 36" className="h-12 w-12 -rotate-90">
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(158,134,255,0.15)" strokeWidth="3" />
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={completionPct >= 80 ? "#66ffb2" : completionPct >= 50 ? "#ffd166" : "#ff5f7f"} strokeWidth="3" strokeDasharray={`${completionPct}, 100`} strokeLinecap="round" />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono text-bright">{completionPct}%</span>
+            </div>
+            <div>
+              <p className="text-xs text-dim font-mono">COMPLETION</p>
+              <p className="text-sm text-bright">{checks.filter((c) => c.ok).length}/{checks.length} checks</p>
+            </div>
+          </div>
+
+          <div className="h-8 w-px bg-border" />
+
+          <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+            <div><span className="text-dim">Targets:</span> <span className="text-core font-mono">{totalTargets}</span></div>
+            <div><span className="text-dim">Vulns:</span> <span className="text-warn font-mono">{totalVulns}</span></div>
+            <div><span className="text-dim">User shells:</span> <span className="text-warn font-mono">{userTargets}</span></div>
+            <div><span className="text-dim">Root/SYSTEM:</span> <span className="text-success font-mono">{ownedTargets}</span></div>
+          </div>
+
+          <div className="h-8 w-px bg-border hidden lg:block" />
+
+          {/* Checklist */}
+          <div className="hidden lg:grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs">
+            {checks.map((c) => (
+              <div key={c.label} className="flex items-center gap-1.5">
+                {c.ok ? (
+                  <CheckCircle2 size={12} className="text-success" />
+                ) : (
+                  <AlertCircle size={12} className="text-dim/40" />
+                )}
+                <span className={c.ok ? "text-bright" : "text-dim/60"}>{c.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex flex-wrap gap-1 border-b border-border pb-px">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
           return (
-            <button key={m.id} onClick={() => setActive(idx)} className={`inline-flex items-center gap-2 rounded border px-3 py-1 ${idx === active ? "border-core bg-core/10 text-core" : "border-border text-dim hover:border-violet/40"}`}>
-              <span className={`h-2 w-2 rounded-full ${color}`} />
-              {m.name}
-              {machines.length > 1 ? (
-                <X
-                  size={12}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeMachine(idx);
-                  }}
-                />
-              ) : null}
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`inline-flex items-center gap-2 rounded-t-md border border-b-0 px-4 py-2 text-sm transition ${
+                isActive
+                  ? "border-violet/40 bg-surface2 text-bright shadow-[0_-1px_6px_rgba(158,134,255,0.1)]"
+                  : "border-transparent text-dim hover:text-bright hover:bg-surface/50"
+              }`}
+            >
+              <Icon size={14} className={isActive ? "text-core" : ""} />
+              {tab.label}
+              {tab.id === "ad-chain" && hasAD && (
+                <span className="h-1.5 w-1.5 rounded-full bg-adblue" />
+              )}
             </button>
           );
         })}
-        <button onClick={addMachine} className="inline-flex items-center gap-1 rounded border border-dashed border-violet/40 px-3 py-1 text-dim hover:text-violet">
-          <Plus size={14} /> Add Machine
-        </button>
       </div>
 
-      <div className="color-panel space-y-3 rounded-md p-4">
-        <div className="grid gap-2 md:grid-cols-4">
-          <input value={machine.name} onChange={(e) => updateMachine({ name: e.target.value })} placeholder="Machine name" className="rounded border border-violet/40 bg-surface px-3 py-2" spellCheck={false} autoComplete="off" />
-          <input value={machine.ip} onChange={(e) => updateMachine({ ip: e.target.value })} placeholder="IP" className="rounded border border-violet/40 bg-surface px-3 py-2" spellCheck={false} autoComplete="off" />
-          <select value={machine.os} onChange={(e) => updateMachine({ os: e.target.value as Machine["os"] })} className="rounded border border-violet/40 bg-surface px-3 py-2">
-            <option value="unknown">unknown</option><option value="linux">linux</option><option value="windows">windows</option>
-          </select>
-          <select value={machine.points} onChange={(e) => updateMachine({ points: e.target.value as Machine["points"] })} className="rounded border border-violet/40 bg-surface px-3 py-2">
-            <option value="10">10</option><option value="20">20</option><option value="25">25</option>
-          </select>
-        </div>
-        <div className="grid gap-2 md:grid-cols-2">
-          <input value={machine.localTxt} onChange={(e) => updateMachine({ localTxt: e.target.value })} placeholder="local.txt flag" className="rounded border border-warn/60 bg-warn/10 px-3 py-2" spellCheck={false} autoComplete="off" />
-          <input value={machine.proofTxt} onChange={(e) => updateMachine({ proofTxt: e.target.value })} placeholder="proof.txt flag" className="rounded border border-success/60 bg-success/10 px-3 py-2" spellCheck={false} autoComplete="off" />
-        </div>
-        {(
-          [
-            ["vulnerabilities", "Vulnerability Summary"],
-            ["enumSteps", "Enumeration Steps"],
-            ["exploitSteps", "Exploitation Steps"],
-            ["privescSteps", "Privilege Escalation Steps"],
-            ["notes", "Additional Notes"],
-          ] as const
-        ).map(([field, label]) => (
-          <textarea
-            key={field}
-            value={machine[field]}
-            onChange={(e) => updateMachine({ [field]: e.target.value })}
-            placeholder={label}
-            className="min-h-28 w-full rounded border border-border bg-surface2 px-3 py-2 focus:border-violet/60 outline-none"
-            spellCheck={false}
-            autoComplete="off"
+      {/* Tab Content */}
+      <div className="min-h-[400px]">
+        {activeTab === "cover" && <CoverTab data={data} update={update} />}
+        {activeTab === "summary" && <SummaryTab data={data} update={update} />}
+        {activeTab === "targets" && (
+          <TargetsTab
+            targets={data.targets}
+            activeIdx={activeTarget}
+            setActiveIdx={setActiveTarget}
+            setTargets={setTargets}
           />
-        ))}
-        <label className="block cursor-pointer rounded border border-dashed border-violet/40 bg-surface2 p-4 text-center text-sm text-dim hover:border-violet">
-          Upload screenshots
-          <input type="file" accept="image/*" multiple onChange={uploadScreens} className="hidden" />
-        </label>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {machine.screenshots.map((s) => (
-            <div key={s.id} className="color-panel rounded-md p-2">
-              <img src={s.dataUrl} alt={s.name} className="mb-2 h-28 w-full rounded object-cover" />
-              <input
-                value={s.caption}
-                onChange={(e) => updateMachine({ screenshots: machine.screenshots.map((i) => (i.id === s.id ? { ...i, caption: e.target.value } : i)) })}
-                placeholder="Caption"
-                className="w-full rounded border border-border bg-surface px-2 py-1 text-xs focus:border-violet/60 outline-none"
-                spellCheck={false}
-                autoComplete="off"
-              />
-              <button onClick={() => updateMachine({ screenshots: machine.screenshots.filter((i) => i.id !== s.id) })} className="mt-2 text-xs text-red">Remove</button>
-            </div>
-          ))}
-        </div>
+        )}
+        {activeTab === "ad-chain" && <ADChainTab data={data} update={update} />}
+        {activeTab === "appendix" && <AppendixTab data={data} update={update} />}
       </div>
     </div>
   );
