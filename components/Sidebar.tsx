@@ -160,10 +160,7 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
-      <div className="absolute bottom-4 left-4 right-4 border-t border-border pt-3 font-mono text-xs">
-        <p className="text-warn/90">LOCAL ONLY</p>
-        <p className="text-custom/90">OSCP 2026</p>
-      </div>
+
     </aside>
   );
 }
