@@ -114,6 +114,7 @@ export default function Sidebar() {
       <div className="mb-4 border-b border-border pb-4">
         <p className="font-mono text-xl tracking-wide text-gradient-mono">OSCP/WIKI</p>
         <p className="font-mono text-xs text-violet/80">by Neo</p>
+        <p className="font-mono text-[10px] text-violet/50 mt-0.5">version 1</p>
       </div>
       <nav className="h-[calc(100vh-160px)] space-y-3 overflow-auto pr-1">
         {categories.map((category) => (
