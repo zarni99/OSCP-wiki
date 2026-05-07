@@ -19,7 +19,7 @@ Make sure you have Node.js installed on your machine.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/zarni99/OSCP-wiki.git
+   git clone https://github.com/1oeneo1/OSCP-wiki.git
    cd OSCP-wiki
    ```
 
