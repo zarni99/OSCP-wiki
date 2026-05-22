@@ -1,166 +1,207 @@
 "use client";
 
 import {
-  ArrowLeftRight,
   Activity,
+  AlertTriangle,
+  ArrowLeftRight,
+  BookOpen,
   CheckSquare,
+  Crosshair,
+  Database,
   FileText,
+  GitBranch,
+  GitMerge,
   Globe,
   Home,
   KeyRound,
+  Monitor,
+  MoveRight,
   Network,
-  Skull,
-  Database,
-  GitBranch,
+  Plug,
   Radar,
   Shield,
+  Skull,
   Star,
+  Terminal,
   TrendingUp,
-  Zap,
+  Trophy,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { sections } from "@/lib/commands";
 import { useVariables } from "@/components/VariablesProvider";
 
+const RECON   = "RECON";
+const EXPLOIT = "EXPLOIT";
+const POST    = "POST EXPLOIT";
+const PRIVESC = "PRIVESC";
+const AD      = "ACTIVE DIRECTORY";
+const WORK    = "WORKSPACE";
+const REF     = "REFERENCE";
+
 const nav = [
-  { href: "/", label: "Dashboard", icon: Home },
-  { href: "/recon", label: "Recon", icon: Radar, category: "OSCP+ CORE", slug: "recon" },
-  { href: "/web", label: "Web Attacks", icon: Globe, category: "OSCP+ CORE", slug: "web" },
-  { href: "/api-attacks", label: "API Attacks", icon: Zap, category: "OSCP+ CORE", countKey: "api" },
-  { href: "/shells", label: "Shells", icon: Skull, category: "OSCP+ CORE", countKey: "shells", hot: true },
-  { href: "/linux-privesc", label: "Linux PrivEsc", icon: TrendingUp, category: "OSCP+ CORE", countKey: "linuxPrivesc" },
-  { href: "/windows-privesc", label: "Windows PrivEsc", icon: FileText, category: "OSCP+ CORE", countKey: "windowsPrivesc" },
-  { href: "/tunneling", label: "Tunneling", icon: Network, category: "OSCP+ CORE", countKey: "tunneling" },
-  { href: "/file-transfer", label: "File Transfer", icon: ArrowLeftRight, category: "OSCP+ CORE", countKey: "fileTransfer" },
-  { href: "/passwords", label: "Hash Cracking", icon: KeyRound, category: "POST-EXPLOITATION", slug: "passwords" },
-  { href: "/loot", label: "Loot / Credentials", icon: Database, category: "POST-EXPLOITATION", countKey: "loot" },
-  { href: "/bof", label: "Buffer Overflow", icon: Activity, category: "OSCP+ CORE", slug: "bof" },
-  { href: "/ad-recon", label: "AD Recon", icon: Shield, category: "ACTIVE DIRECTORY", countKey: "adRecon" },
-  { href: "/ad-attacks", label: "AD Attacks", icon: Zap, category: "ACTIVE DIRECTORY", countKey: "adAttacks" },
-  { href: "/ad-lateral", label: "AD Lateral", icon: ArrowLeftRight, category: "ACTIVE DIRECTORY", countKey: "adLateral" },
-  { href: "/persistence", label: "Persistence", icon: CheckSquare, category: "ACTIVE DIRECTORY", countKey: "persistence" },
-  { href: "/checklist", label: "Exam Checklist", icon: CheckSquare, category: "CUSTOM" },
-  { href: "/workflow", label: "Workflow Board", icon: GitBranch, category: "CUSTOM" },
-  { href: "/report", label: "Report Builder", icon: FileText, category: "CUSTOM" },
-  { href: "/favorites", label: "Favorites", icon: Star, category: "CUSTOM" },
-  { href: "/my-commands", label: "My Commands", icon: Zap, category: "CUSTOM", countKey: "customCommands" },
+  { href: "/",                label: "Dashboard",         icon: Home                                              },
+  // ── RECON ──────────────────────────────────────────────
+  { href: "/recon",           label: "Recon & Enum",      icon: Radar,        category: RECON,   slug: "recon"   },
+  // ── EXPLOIT ────────────────────────────────────────────
+  { href: "/shells",          label: "Shells & Payloads", icon: Skull,        category: EXPLOIT, countKey: "shells"       },
+  { href: "/web",             label: "Web Attacks",       icon: Globe,        category: EXPLOIT, slug: "web"              },
+  { href: "/api-attacks",     label: "API Attacks",       icon: Plug,         category: EXPLOIT, countKey: "api"          },
+  { href: "/bof",             label: "Buffer Overflow",   icon: Activity,     category: EXPLOIT, slug: "bof"              },
+  // ── POST EXPLOIT ───────────────────────────────────────
+  { href: "/file-transfer",   label: "File Transfer",     icon: ArrowLeftRight, category: POST,  countKey: "fileTransfer" },
+  { href: "/loot",            label: "Loot & Creds",      icon: Database,     category: POST,    countKey: "loot"         },
+  { href: "/passwords",       label: "Hash Cracking",     icon: KeyRound,     category: POST,    slug: "passwords"        },
+  { href: "/tunneling",       label: "Tunneling & Pivot", icon: Network,      category: POST,    countKey: "tunneling"    },
+  // ── PRIVESC ────────────────────────────────────────────
+  { href: "/linux-privesc",   label: "Linux PrivEsc",     icon: TrendingUp,   category: PRIVESC, countKey: "linuxPrivesc"   },
+  { href: "/windows-privesc", label: "Windows PrivEsc",   icon: Monitor,      category: PRIVESC, countKey: "windowsPrivesc" },
+  // ── ACTIVE DIRECTORY ───────────────────────────────────
+  { href: "/ad-recon",        label: "AD Recon",          icon: Shield,       category: AD,      countKey: "adRecon"   },
+  { href: "/ad-attacks",      label: "AD Attacks",        icon: Crosshair,    category: AD,      countKey: "adAttacks" },
+  { href: "/ad-lateral",      label: "AD Lateral",        icon: MoveRight,    category: AD,      countKey: "adLateral" },
+  // ── WORKSPACE ──────────────────────────────────────────
+  { href: "/exam",            label: "Exam Dashboard",    icon: Trophy,       category: WORK },
+  { href: "/workflow",        label: "Workflow Board",    icon: GitBranch,    category: WORK },
+  { href: "/report",          label: "Report Builder",    icon: FileText,     category: WORK },
+  { href: "/favorites",       label: "Favorites",         icon: Star,         category: WORK },
+  { href: "/my-commands",     label: "My Commands",       icon: Terminal,     category: WORK, countKey: "customCommands" },
+  // ── REFERENCE ──────────────────────────────────────────
+  { href: "/methodology",     label: "Methodology",       icon: BookOpen,     category: REF },
+  { href: "/chains",          label: "Attack Chains",     icon: GitMerge,     category: REF },
+  { href: "/cve",             label: "CVE Reference",     icon: AlertTriangle, category: REF },
+  { href: "/checklist",       label: "Exam Checklist",    icon: CheckSquare,  category: REF },
 ];
 
-const categories = ["OSCP+ CORE", "ACTIVE DIRECTORY", "POST-EXPLOITATION", "CUSTOM"];
-const categoryStyles: Record<string, string> = {
-  "OSCP+ CORE": "text-core",
-  "ACTIVE DIRECTORY": "text-adblue",
-  "POST-EXPLOITATION": "text-post",
-  CUSTOM: "text-custom",
+const categories = [RECON, EXPLOIT, POST, PRIVESC, AD, WORK, REF];
+
+const categoryColor: Record<string, string> = {
+  [RECON]:   "text-core",
+  [EXPLOIT]: "text-post",
+  [POST]:    "text-warn",
+  [PRIVESC]: "text-success",
+  [AD]:      "text-adblue",
+  [WORK]:    "text-custom",
+  [REF]:     "text-dim",
+};
+
+const _exploit = sections.find((s) => s.slug === "exploit");
+const _privesc = sections.find((s) => s.slug === "privesc");
+const _post    = sections.find((s) => s.slug === "post");
+const _ad      = sections.find((s) => s.slug === "ad");
+
+const commandCountBySlug = sections.reduce<Record<string, number>>((acc, section) => {
+  acc[section.slug] = section.groups.reduce((sum, g) => sum + g.commands.length, 0);
+  return acc;
+}, {});
+
+const staticCounts: Record<string, number> = {
+  shells: _exploit
+    ? _exploit.groups
+        .filter((g) => ["Reverse Shells", "Listeners", "Shell Stabilization TTY", "MSFvenom Payloads", "Windows Execution & Shells"].includes(g.title))
+        .reduce((sum, g) => sum + g.commands.length, 0)
+    : 0,
+  api: _exploit?.groups.find((g) => g.title === "API Attacks")?.commands.length || 0,
+  linuxPrivesc: _privesc
+    ? _privesc.groups.reduce((sum, g) => sum + g.commands.filter((c) => c.tags.includes("linux") || c.tags.includes("all")).length, 0)
+    : 0,
+  windowsPrivesc: _privesc
+    ? _privesc.groups.reduce((sum, g) => sum + g.commands.filter((c) => c.tags.includes("windows") || c.tags.includes("all")).length, 0)
+    : 0,
+  tunneling:    _post?.groups.find((g) => g.title === "Pivoting & Tunneling")?.commands.length || 0,
+  fileTransfer: _post?.groups.filter((g) => g.title.includes("File Transfer")).reduce((sum, g) => sum + g.commands.length, 0) || 0,
+  loot:
+    (_post?.groups.filter((g) => ["Linux Looting", "Windows Looting"].includes(g.title)).reduce((sum, g) => sum + g.commands.length, 0) || 0) +
+    (_privesc?.groups.filter((g) => ["Credential Hunting Linux", "Windows Credential Dumping"].includes(g.title)).reduce((sum, g) => sum + g.commands.length, 0) || 0),
+  adRecon: _ad?.groups.filter((g) => g.title === "AD Enumeration").reduce((sum, g) => sum + g.commands.length, 0) || 0,
+  adAttacks: _ad?.groups
+    .filter((g) => ["ASREPRoasting", "Kerberoasting", "Pass-the-Hash", "Credential Dumping", "Golden/Silver Tickets", "ADCS Abuse", "Shadow Credentials", "NTLM Relay", "Delegation Abuse"].includes(g.title))
+    .reduce((sum, g) => sum + g.commands.length, 0) || 0,
+  adLateral: _ad?.groups
+    .filter((g) => ["NetExec / nxc", "MSSQL Attacks", "Lateral Movement"].includes(g.title))
+    .reduce((sum, g) => sum + g.commands.length, 0) || 0,
 };
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { customCommands } = useVariables();
-  const commandCountBySlug = sections.reduce<Record<string, number>>((acc, section) => {
-    acc[section.slug] = section.groups.reduce((sum, group) => sum + group.commands.length, 0);
-    return acc;
-  }, {});
-  const exploit = sections.find((section) => section.slug === "exploit");
-  const privesc = sections.find((section) => section.slug === "privesc");
-  const post = sections.find((section) => section.slug === "post");
-  const derivedCounts: Record<string, number> = {
-    shells: exploit
-      ? exploit.groups
-          .filter((group) => ["Shell Stabilization TTY", "MSFvenom Payloads", "Listeners", "Windows Execution & Shells"].includes(group.title))
-          .reduce((sum, group) => sum + group.commands.length, 0)
-      : 0,
-    api: exploit?.groups.find((group) => group.title === "API Attacks")?.commands.length || 0,
-    linuxPrivesc: privesc
-      ? privesc.groups.reduce((sum, group) => sum + group.commands.filter((command) => command.tags.includes("linux") || command.tags.includes("all")).length, 0)
-      : 0,
-    windowsPrivesc: privesc
-      ? privesc.groups.reduce((sum, group) => sum + group.commands.filter((command) => command.tags.includes("windows") || command.tags.includes("all")).length, 0)
-      : 0,
-    tunneling: post?.groups.find((group) => group.title === "Pivoting & Tunneling")?.commands.length || 0,
-    fileTransfer: post
-      ? post.groups.filter((group) => group.title.includes("File Transfer")).reduce((sum, group) => sum + group.commands.length, 0)
-      : 0,
-    loot:
-      (post?.groups.filter((group) => ["Meterpreter"].includes(group.title)).reduce((sum, group) => sum + group.commands.length, 0) || 0) +
-      (privesc?.groups.filter((group) => ["Credential Hunting"].includes(group.title)).reduce((sum, group) => sum + group.commands.length, 0) || 0),
-    adRecon: sections
-      .find((section) => section.slug === "ad")
-      ?.groups.filter((group) => ["BloodHound"].includes(group.title))
-      .reduce((sum, group) => sum + group.commands.length, 0) || 0,
-    adAttacks: sections
-      .find((section) => section.slug === "ad")
-      ?.groups.filter((group) => ["ASREPRoasting", "Kerberoasting", "Pass-the-Hash", "Credential Dumping", "ADCS Abuse", "Delegation Abuse"].includes(group.title))
-      .reduce((sum, group) => sum + group.commands.length, 0) || 0,
-    adLateral: sections
-      .find((section) => section.slug === "ad")
-      ?.groups.filter((group) => ["Lateral Movement"].includes(group.title))
-      .reduce((sum, group) => sum + group.commands.length, 0) || 0,
-    persistence:
-      (sections
-        .find((section) => section.slug === "ad")
-        ?.groups.filter((group) => ["Golden/Silver Tickets"].includes(group.title))
-        .reduce((sum, group) => sum + group.commands.length, 0) || 0) +
-      (sections
-        .find((section) => section.slug === "post")
-        ?.groups.filter((group) => ["Persistence Quick Ops"].includes(group.title))
-        .reduce((sum, group) => sum + group.commands.length, 0) || 0),
-    customCommands: customCommands.length,
-  };
+  const counts: Record<string, number> = { ...staticCounts, customCommands: customCommands.length };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-violet/30 bg-[#090f1e] px-4 py-5">
-      <div className="mb-4 border-b border-border pb-4">
-        <p className="font-mono text-xl tracking-wide text-gradient-mono">OSCP/WIKI</p>
-        <p className="font-mono text-xs text-violet/80">by Neo</p>
-        <p className="font-mono text-[10px] text-violet/50 mt-0.5">version 1</p>
+    <aside className="fixed left-0 top-0 h-screen w-60 border-r border-border bg-surface px-2 py-4">
+      {/* Logo */}
+      <div className="mb-3 border-b border-border pb-3 px-2">
+        <p className="font-mono text-base tracking-widest text-orange">OSCP/WIKI</p>
+        <p className="font-mono text-[11px] text-dim mt-0.5">by Neo · v2</p>
       </div>
-      <nav className="h-[calc(100vh-160px)] space-y-3 overflow-auto pr-1">
-        {categories.map((category) => (
-          <div key={category}>
-            <p className={`mb-1 px-2 font-mono text-[10px] uppercase tracking-[0.2em] ${categoryStyles[category]}`}>{category}</p>
-            <div className="space-y-1">
-              {nav.filter((item) => item.category === category).map((item) => {
-                const active = pathname === item.href;
-                const Icon = item.icon;
-                const count = item.slug ? commandCountBySlug[item.slug] : item.countKey ? derivedCounts[item.countKey] : undefined;
-                const activeColor =
-                  category === "ACTIVE DIRECTORY"
-                    ? "border-adblue/70 bg-adblue/10 text-adblue"
-                    : category === "POST-EXPLOITATION"
-                      ? "border-post/70 bg-post/10 text-post"
-                      : category === "CUSTOM"
-                        ? "border-custom/70 bg-custom/10 text-custom"
-                        : "border-core/70 bg-core/10 text-core";
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center justify-between rounded-md border px-2.5 py-1.5 text-sm ${
-                      active
-                        ? `${activeColor} shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset]`
-                        : "border-transparent text-slate-300 hover:border-violet/40 hover:bg-violet/10 hover:text-bright"
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Icon size={14} />
-                      {item.label}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      {item.hot ? (
-                        <span className="rounded bg-post/20 px-1.5 py-0.5 font-mono text-[10px] text-post">HOT</span>
-                      ) : null}
-                      {count ? <span className="rounded-full bg-gradient-to-r from-violet/40 to-core/40 px-1.5 py-0.5 font-mono text-[10px] text-bright">{count}</span> : null}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </nav>
 
+      {/* Nav */}
+      <nav className="h-[calc(100vh-108px)] overflow-auto pr-0.5">
+        {/* Dashboard */}
+        {nav
+          .filter((item) => !item.category)
+          .map((item) => {
+            const active = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`mb-1 flex items-center gap-2 rounded px-2.5 py-1.5 font-mono text-xs transition-colors border-l-2 ${
+                  active
+                    ? "border-orange bg-orange/10 text-orange"
+                    : "border-transparent text-dim hover:bg-white/5 hover:text-bright"
+                }`}
+              >
+                <Icon size={13} className="shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+
+        {/* Category groups */}
+        {categories.map((category) => {
+          const items = nav.filter((item) => item.category === category);
+          if (items.length === 0) return null;
+          return (
+            <div key={category} className="mt-3 border-t border-border/40 pt-2.5">
+              <p className={`mb-1 px-2 font-mono text-[10px] font-medium tracking-widest ${categoryColor[category]}`}>
+                {category}
+              </p>
+              <div className="space-y-0.5">
+                {items.map((item) => {
+                  const active = pathname === item.href;
+                  const Icon = item.icon;
+                  const count = item.slug
+                    ? commandCountBySlug[item.slug]
+                    : item.countKey
+                    ? counts[item.countKey]
+                    : undefined;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center justify-between rounded px-2.5 py-1.5 font-mono text-xs transition-colors border-l-2 ${
+                        active
+                          ? "border-orange bg-orange/10 text-orange"
+                          : "border-transparent text-dim hover:bg-white/5 hover:text-bright"
+                      }`}
+                    >
+                      <span className="inline-flex min-w-0 items-center gap-2">
+                        <Icon size={12} className="shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </span>
+                      {count !== undefined && count > 0 && (
+                        <span className="ml-2 shrink-0 font-mono text-[10px] text-dim/50">{count}</span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </nav>
     </aside>
   );
 }

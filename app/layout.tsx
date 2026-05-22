@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import { VariablesProvider } from "@/components/VariablesProvider";
+import { ReportProvider } from "@/components/ReportProvider";
 
 export const metadata: Metadata = {
   title: "oscp-wiki",
@@ -19,21 +20,23 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-bg text-bright">
         <VariablesProvider>
-          <Sidebar />
-          <main className="ml-64 min-h-screen">
-            <TopBar />
-            <div className="p-6">{children}</div>
-          </main>
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: "#131c30",
-                color: "#eaf2ff",
-                border: "1px solid #223252",
-              },
-            }}
-          />
+          <ReportProvider>
+            <Sidebar />
+            <main className="ml-60 min-h-screen">
+              <TopBar />
+              <div className="p-6">{children}</div>
+            </main>
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: "#131c30",
+                  color: "#eaf2ff",
+                  border: "1px solid #223252",
+                },
+              }}
+            />
+          </ReportProvider>
         </VariablesProvider>
       </body>
     </html>

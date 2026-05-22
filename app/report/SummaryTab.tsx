@@ -1,10 +1,9 @@
 "use client";
 
 import { ReportData } from "./types";
+import MarkdownEditor from "./MarkdownEditor";
 
-const field = "rounded border border-violet/40 bg-surface px-3 py-2 text-bright placeholder:text-dim/60 focus:border-core/60 outline-none";
 const label = "block mb-1 text-xs font-mono uppercase tracking-wider text-dim";
-const textarea = `${field} min-h-[140px] w-full resize-y`;
 
 interface Props {
   data: ReportData;
@@ -26,12 +25,11 @@ export default function SummaryTab({ data, update }: Props) {
         </p>
         <div>
           <label className={label}>Executive Summary</label>
-          <textarea
+          <MarkdownEditor
             value={data.executiveSummary}
-            onChange={(e) => update({ executiveSummary: e.target.value })}
+            onChange={(next) => update({ executiveSummary: next })}
             placeholder={`Example:\n\nI was tasked with performing an internal penetration test towards the Offensive Security Exam environment. The objective was to evaluate the security posture of the exam network and identify exploitable vulnerabilities.\n\nDuring the assessment, I was able to gain access to X out of Y target machines. The targets included both standalone systems and an Active Directory domain environment...\n\nOverall, several critical and high-severity vulnerabilities were identified...`}
-            className={`${textarea} min-h-[200px]`}
-            spellCheck={false}
+            minHeight={200}
           />
         </div>
       </div>
@@ -48,12 +46,11 @@ export default function SummaryTab({ data, update }: Props) {
         </p>
         <div>
           <label className={label}>Testing Methodology</label>
-          <textarea
+          <MarkdownEditor
             value={data.methodology}
-            onChange={(e) => update({ methodology: e.target.value })}
+            onChange={(next) => update({ methodology: next })}
             placeholder="Describe the methodology used..."
-            className={`${textarea} min-h-[200px]`}
-            spellCheck={false}
+            minHeight={200}
           />
         </div>
       </div>
@@ -66,12 +63,12 @@ export default function SummaryTab({ data, update }: Props) {
         </h3>
         <div>
           <label className={label}>Tools & Software</label>
-          <textarea
+          <MarkdownEditor
             value={data.toolsUsed}
-            onChange={(e) => update({ toolsUsed: e.target.value })}
+            onChange={(next) => update({ toolsUsed: next })}
             placeholder="List tools used during the assessment..."
-            className={`${textarea} min-h-[100px]`}
-            spellCheck={false}
+            minHeight={100}
+            preview={false}
           />
         </div>
       </div>

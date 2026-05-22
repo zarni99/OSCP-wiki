@@ -1,10 +1,7 @@
 "use client";
 
 import { ReportData } from "./types";
-
-const field = "rounded border border-violet/40 bg-surface px-3 py-2 text-bright placeholder:text-dim/60 focus:border-core/60 outline-none";
-const label = "block mb-1 text-xs font-mono uppercase tracking-wider text-dim";
-const textarea = `${field} min-h-[140px] w-full resize-y`;
+import MarkdownEditor from "./MarkdownEditor";
 
 interface Props {
   data: ReportData;
@@ -23,9 +20,9 @@ export default function AppendixTab({ data, update }: Props) {
           Include any supplementary information: custom scripts, additional tool output, 
           proof file hashes, or any other information that supports your findings.
         </p>
-        <textarea
+        <MarkdownEditor
           value={data.appendix}
-          onChange={(e) => update({ appendix: e.target.value })}
+          onChange={(next) => update({ appendix: next })}
           placeholder={`Appendix A: Custom Scripts
 ---
 [Include any custom scripts or exploits used]
@@ -39,8 +36,8 @@ Machine 1 - proof.txt: <hash>
 Appendix C: Additional Tool Output
 ---
 [Any other relevant output]`}
-          className={`${textarea} min-h-[300px] font-mono text-sm`}
-          spellCheck={false}
+          minHeight={300}
+          mono
         />
       </div>
 

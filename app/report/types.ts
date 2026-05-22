@@ -1,3 +1,13 @@
+export function generateId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
 export interface Screenshot {
   id: string;
   name: string;
@@ -16,6 +26,29 @@ export interface Vulnerability {
   remediation: string;
 }
 
+/**
+ * A discrete step in exploitation or privilege escalation.
+ * Optional. When present, the PDF renders numbered steps with figure refs.
+ * If steps are empty, the PDF falls back to the markdown `exploitation`/`privesc` field.
+ */
+export interface ExploitStep {
+  id: string;
+  title: string;
+  description: string; // markdown
+  command: string;     // raw shell — rendered in a code block
+  output: string;      // raw text — rendered in a code block
+  screenshot: Screenshot | null;
+}
+
+export const emptyStep = (): ExploitStep => ({
+  id: generateId(),
+  title: "",
+  description: "",
+  command: "",
+  output: "",
+  screenshot: null,
+});
+
 export interface Target {
   id: string;
   name: string;
@@ -29,12 +62,19 @@ export interface Target {
   proofScreenshot: Screenshot | null;
   vulnerabilities: Vulnerability[];
   enumeration: string;
-  exploitation: string;
+  exploitation: string;            // markdown — legacy free-form
+  exploitationSteps?: ExploitStep[]; // structured steps; when present they take precedence in PDF
   postExploitation: string;
-  privesc: string;
+  privesc: string;                 // markdown — legacy free-form
+  privescSteps?: ExploitStep[];
   screenshots: Screenshot[];
   notes: string;
   isAD: boolean;
+  /** Exam tracker fields — shared with /exam dashboard */
+  examPoints?: number;       // 10 / 20 (AD client / DC or standalone)
+  localCaptured?: boolean;   // exam tracker checkbox; derived initial value: !!localTxt
+  proofCaptured?: boolean;   // exam tracker checkbox; derived initial value: !!proofTxt
+  examNotes?: string;        // short tracker notes (creds, vectors, blockers)
 }
 
 export interface ReportData {
@@ -50,6 +90,13 @@ export interface ReportData {
   appendix: string;
   toolsUsed: string;
   targets: Target[];
+  /**
+   * When true, exporters (PDF + Markdown) follow Offsec's PWK template
+   * structure exactly: 1.0 Documentation → 2.0 High-Level Summary →
+   * 3.0 Methodologies → 4.0 Findings → 5.0 Active Directory → Appendix,
+   * with required boilerplate (Objective, Requirements, Recommendations).
+   */
+  useOfficialTemplate?: boolean;
 }
 
 export type ReportTab = "cover" | "summary" | "targets" | "ad-chain" | "appendix";
@@ -63,7 +110,7 @@ export const SEVERITY_COLORS: Record<Vulnerability["severity"], string> = {
 };
 
 export const emptyVulnerability = (): Vulnerability => ({
-  id: crypto.randomUUID(),
+  id: generateId(),
   title: "",
   severity: "High",
   cvss: "",
@@ -74,7 +121,7 @@ export const emptyVulnerability = (): Vulnerability => ({
 });
 
 export const emptyTarget = (): Target => ({
-  id: crypto.randomUUID(),
+  id: generateId(),
   name: "",
   ip: "",
   os: "Unknown",
@@ -87,11 +134,17 @@ export const emptyTarget = (): Target => ({
   vulnerabilities: [emptyVulnerability()],
   enumeration: "",
   exploitation: "",
+  exploitationSteps: [],
   postExploitation: "",
   privesc: "",
+  privescSteps: [],
   screenshots: [],
   notes: "",
   isAD: false,
+  examPoints: 20,
+  localCaptured: false,
+  proofCaptured: false,
+  examNotes: "",
 });
 
 export const emptyReport = (): ReportData => ({
@@ -128,4 +181,5 @@ export const emptyReport = (): ReportData => ({
   appendix: "",
   toolsUsed: "Nmap, Gobuster, Burp Suite, Metasploit (if allowed), LinPEAS, WinPEAS, Chisel, Ligolo-ng, Hashcat, John the Ripper, Impacket, BloodHound, Certipy",
   targets: [emptyTarget()],
+  useOfficialTemplate: false,
 });

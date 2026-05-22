@@ -1,10 +1,7 @@
 "use client";
 
 import { ReportData } from "./types";
-
-const field = "rounded border border-violet/40 bg-surface px-3 py-2 text-bright placeholder:text-dim/60 focus:border-core/60 outline-none";
-const label = "block mb-1 text-xs font-mono uppercase tracking-wider text-dim";
-const textarea = `${field} min-h-[140px] w-full resize-y`;
+import MarkdownEditor from "./MarkdownEditor";
 
 interface Props {
   data: ReportData;
@@ -58,9 +55,9 @@ export default function ADChainTab({ data, update }: Props) {
           Provide a comprehensive step-by-step narrative of your AD attack chain. Include initial
           foothold, credential harvesting, lateral movement, and privilege escalation to Domain Admin.
         </p>
-        <textarea
+        <MarkdownEditor
           value={data.adChainSummary}
-          onChange={(e) => update({ adChainSummary: e.target.value })}
+          onChange={(next) => update({ adChainSummary: next })}
           placeholder={`Phase 1: Initial Foothold
 - Target: MS01 (192.168.x.x)
 - Discovered web application vulnerability on port 80
@@ -79,8 +76,8 @@ Phase 4: Domain Admin
 - Exploited AD CS misconfiguration (ESC1)
 - Or: Exploited unconstrained delegation
 - Achieved Domain Admin access on DC01`}
-          className={`${textarea} min-h-[300px] font-mono text-sm`}
-          spellCheck={false}
+          minHeight={300}
+          mono
         />
       </div>
     </div>

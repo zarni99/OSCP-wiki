@@ -79,26 +79,39 @@ export function VariablesProvider({ children }: { children: React.ReactNode }) {
   const [customCommands, setCustomCommands] = useState<CustomCommand[]>([]);
 
   useEffect(() => {
+    const safeJson = <T,>(raw: string | null, fallback: T): T => {
+      if (!raw) return fallback;
+      try {
+        return JSON.parse(raw) as T;
+      } catch {
+        return fallback;
+      }
+    };
+
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      setValues({ ...emptyValues(), ...JSON.parse(raw) });
-    }
+    if (raw) setValues({ ...emptyValues(), ...safeJson<Record<string, string>>(raw, {}) });
+
     const rawMode = localStorage.getItem(COPY_MODE_KEY);
-    if (rawMode === "template" || rawMode === "rendered") {
-      setCopyMode(rawMode);
-    }
+    if (rawMode === "template" || rawMode === "rendered") setCopyMode(rawMode);
+
     const rawFav = localStorage.getItem(FAVORITES_KEY);
-    if (rawFav) setFavorites(JSON.parse(rawFav));
+    setFavorites(safeJson<string[]>(rawFav, []));
+
     const rawHistory = localStorage.getItem(HISTORY_KEY);
-    if (rawHistory) setHistory(JSON.parse(rawHistory));
+    setHistory(safeJson<CopyHistoryItem[]>(rawHistory, []));
+
     const rawMachines = localStorage.getItem(MACHINES_KEY);
-    if (rawMachines) setMachines(JSON.parse(rawMachines));
+    const parsedMachines = safeJson<MachineItem[]>(rawMachines, []);
+    if (parsedMachines.length > 0) setMachines(parsedMachines);
+
     const rawActiveMachine = localStorage.getItem(ACTIVE_MACHINE_KEY);
     if (rawActiveMachine) setActiveMachineId(rawActiveMachine);
+
     const rawTimeline = localStorage.getItem(TIMELINE_KEY);
-    if (rawTimeline) setTimeline(JSON.parse(rawTimeline));
+    setTimeline(safeJson<TimelineItem[]>(rawTimeline, []));
+
     const rawCustom = localStorage.getItem(CUSTOM_COMMANDS_KEY);
-    if (rawCustom) setCustomCommands(JSON.parse(rawCustom));
+    setCustomCommands(safeJson<CustomCommand[]>(rawCustom, []));
   }, []);
 
   useEffect(() => {
@@ -163,14 +176,12 @@ export function VariablesProvider({ children }: { children: React.ReactNode }) {
       removeMachine: (id: string) => {
         setMachines((prev) => {
           const next = prev.filter((m) => m.id !== id);
-          if (next.length === 0) return [{ id: "machine-1", name: "MACHINE-01" }];
-          return next;
+          const safeNext = next.length === 0 ? [{ id: "machine-1", name: "MACHINE-01" }] : next;
+          if (activeMachineId === id) setActiveMachineId(safeNext[0].id);
+          return safeNext;
         });
         setTimeline((prev) => prev.filter((entry) => entry.machineId !== id));
         setHistory((prev) => prev.filter((entry) => entry.machineId !== id));
-        if (activeMachineId === id) {
-          setActiveMachineId((machines.find((m) => m.id !== id)?.id) || "machine-1");
-        }
       },
       timeline,
       clearTimeline: () => setTimeline([]),

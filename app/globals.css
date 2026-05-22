@@ -11,18 +11,13 @@
 }
 
 body {
-  color: #f2f6ff;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(79, 230, 255, 0.25), transparent 28%),
-    radial-gradient(circle at 100% 0%, rgba(158, 134, 255, 0.22), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(255, 177, 74, 0.2), transparent 28%),
-    radial-gradient(circle at 20% 70%, rgba(102, 255, 178, 0.12), transparent 24%),
-    #070912;
+  color: #e0dcd0;
+  background: #080808;
   font-family: var(--font-exo-2), sans-serif;
 }
 
 * {
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease;
 }
 
 *::-webkit-scrollbar {
@@ -31,23 +26,22 @@ body {
 }
 
 *::-webkit-scrollbar-track {
-  background: #0d1324;
+  background: #0c0c0c;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #2a3a61;
+  background: #2a2a2a;
   border-radius: 999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #4fe6ff;
+  background: #cc9018;
 }
 
 @layer components {
   .color-panel {
-    background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
-    border: 1px solid rgba(158, 134, 255, 0.25);
-    box-shadow: 0 0 0 1px rgba(79, 230, 255, 0.08) inset;
+    background: #101010;
+    border: 1px solid #252525;
   }
 }
 
@@ -56,16 +50,10 @@ body {
     text-wrap: balance;
   }
 
-  /* Vivid heading gradients (background-clip) */
+  /* Simplified gradients — terminal-themed */
   .text-gradient-brand {
     display: inline-block;
-    background-image: linear-gradient(
-      105deg,
-      #4fe6ff 0%,
-      #9e86ff 32%,
-      #ff9f5a 68%,
-      #66ffb2 100%
-    );
+    background-image: linear-gradient(100deg, #cc9018 0%, #e0dcd0 50%, #38c050 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -74,7 +62,7 @@ body {
 
   .text-gradient-cool {
     display: inline-block;
-    background-image: linear-gradient(95deg, #4fe6ff, #9e86ff);
+    background-image: linear-gradient(95deg, #4898d8, #9070e8);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -83,7 +71,7 @@ body {
 
   .text-gradient-warm {
     display: inline-block;
-    background-image: linear-gradient(95deg, #ff9f5a, #ff5f7f);
+    background-image: linear-gradient(95deg, #d07030, #cc9018);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -93,10 +81,50 @@ body {
   .text-gradient-mono {
     display: inline-block;
     font-family: var(--font-share-tech-mono), monospace;
-    background-image: linear-gradient(90deg, #66ffb2, #4fe6ff, #9e86ff);
+    background-image: linear-gradient(90deg, #38c050, #28b0c0, #cc9018);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
   }
+
+  /* Markdown preview styles for the Report Builder */
+  .report-md { color: #e0dcd0; }
+  .report-md h1, .report-md h2, .report-md h3, .report-md h4 {
+    color: #cc9018; font-weight: 600; margin: 0.8em 0 0.4em; line-height: 1.3;
+  }
+  .report-md h1 { font-size: 1.4em; }
+  .report-md h2 { font-size: 1.2em; }
+  .report-md h3 { font-size: 1.05em; }
+  .report-md p { margin: 0.5em 0; }
+  .report-md a { color: #4898d8; text-decoration: underline; }
+  .report-md a:hover { color: #7070d8; }
+  .report-md strong { color: #ffffff; font-weight: 600; }
+  .report-md em { color: #e0dcd0; font-style: italic; }
+  .report-md ul, .report-md ol { margin: 0.5em 0; padding-left: 1.4em; }
+  .report-md ul { list-style: disc; }
+  .report-md ol { list-style: decimal; }
+  .report-md li { margin: 0.25em 0; }
+  .report-md code {
+    background: #181818; border: 1px solid #252525; border-radius: 3px;
+    padding: 0.1em 0.4em; font-family: var(--font-share-tech-mono), monospace;
+    font-size: 0.9em; color: #38c050;
+  }
+  .report-md pre {
+    background: #0a0a0a; border: 1px solid #252525; border-radius: 4px;
+    padding: 0.7em 0.9em; overflow-x: auto; margin: 0.6em 0;
+  }
+  .report-md pre code { background: transparent; border: 0; padding: 0; color: #38c050; font-size: 0.85em; }
+  .report-md blockquote {
+    border-left: 3px solid #cc9018; padding-left: 0.8em; margin: 0.5em 0;
+    color: #b0a890; font-style: italic;
+  }
+  .report-md img {
+    max-width: 100%; height: auto; border: 1px solid #252525;
+    border-radius: 4px; margin: 0.5em 0;
+  }
+  .report-md table { border-collapse: collapse; margin: 0.6em 0; font-size: 0.9em; }
+  .report-md th, .report-md td { border: 1px solid #252525; padding: 0.35em 0.6em; text-align: left; }
+  .report-md th { background: #181818; color: #cc9018; font-weight: 600; }
+  .report-md hr { border: 0; border-top: 1px solid #252525; margin: 1em 0; }
 }
